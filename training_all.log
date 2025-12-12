@@ -1,0 +1,27 @@
+2025-12-12 11:04:45 - __main__ - INFO - Starting training of all agent configurations...
+2025-12-12 11:04:45 - __main__ - INFO - This may take 15-30 minutes depending on your system.
+2025-12-12 11:04:45 - __main__ - INFO - ============================================================
+2025-12-12 11:04:45 - __main__ - INFO - Training Single Agent (Baseline)
+2025-12-12 11:04:45 - __main__ - INFO - ============================================================
+2025-12-12 11:04:48 - __main__ - INFO - Starting training for 10000 timesteps...
+2025-12-12 11:33:12 - gpu_utils - WARNING - CUDA not available, using CPU
+2025-12-12 11:33:12 - gpu_utils - INFO - Using CPU
+2025-12-12 11:33:12 - gpu_utils - WARNING - ============================================================
+2025-12-12 11:33:12 - gpu_utils - WARNING - GPU NOT AVAILABLE
+2025-12-12 11:33:12 - gpu_utils - WARNING - ============================================================
+2025-12-12 11:33:12 - gpu_utils - WARNING - To use GPU, you need:
+2025-12-12 11:33:12 - gpu_utils - WARNING - 1. NVIDIA GPU with CUDA support
+2025-12-12 11:33:12 - gpu_utils - WARNING - 2. CUDA drivers installed
+2025-12-12 11:33:12 - gpu_utils - WARNING - 3. PyTorch with CUDA support
+2025-12-12 11:33:12 - gpu_utils - WARNING - 
+2025-12-12 11:33:12 - gpu_utils - WARNING - Install PyTorch with CUDA:
+2025-12-12 11:33:12 - gpu_utils - WARNING -   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+2025-12-12 11:33:12 - gpu_utils - WARNING -   (Adjust cu121 to your CUDA version)
+2025-12-12 11:33:12 - gpu_utils - WARNING - ============================================================
+2025-12-12 11:33:12 - __main__ - INFO - Starting training of all agent configurations...
+2025-12-12 11:33:12 - __main__ - INFO - This may take 15-30 minutes depending on your system.
+2025-12-12 11:33:12 - __main__ - INFO - ============================================================
+2025-12-12 11:33:12 - __main__ - INFO - Training Single Agent (Baseline)
+2025-12-12 11:33:12 - __main__ - INFO - ============================================================
+2025-12-12 11:33:12 - __main__ - INFO - Training on device: cpu
+2025-12-12 11:33:13 - __main__ - INFO - Starting training for 10000 timesteps...

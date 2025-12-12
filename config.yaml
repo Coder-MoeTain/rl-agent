@@ -1,0 +1,48 @@
+# Configuration file for mini-pentest-rl
+
+# Environment settings
+environment:
+  base_url: "http://localhost:3000"
+  max_steps: 100
+
+# PPO settings
+ppo:
+  policy: "MlpPolicy"
+  learning_rate: 3e-4
+  n_steps: 2048
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.01
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+
+# PER settings
+per:
+  capacity: 4096
+  alpha: 0.6  # Priority exponent
+  beta_start: 0.4  # Initial importance sampling correction
+  beta_frames: 100000  # Frames to anneal beta to 1.0
+  batch_size: 64
+
+# Training settings
+training:
+  total_timesteps: 20000
+  log_interval: 10
+  save_interval: 1000
+  tensorboard_log: "./tensorboard_logs/"
+
+# Multi-agent settings
+multi_agent:
+  num_episodes: 200
+  batch_size: 64
+  learning_rate: 3e-4
+  hidden_size: 256
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "training.log"
+
