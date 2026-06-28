@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mini-pentest-rl"
+version = "1.0.0"
+description = "Research-grade RL framework for autonomous web penetration testing"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "stable-baselines3==2.3.2",
+    "torch>=2.0.0,<3.0.0",
+    "gymnasium==0.29.1",
+    "requests==2.32.3",
+    "beautifulsoup4==4.12.3",
+    "networkx==3.3",
+    "numpy>=1.24.0,<2.0.0",
+    "matplotlib==3.9.0",
+    "pandas==2.2.2",
+    "pyyaml==6.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.2",
+    "pytest-cov==5.0.0",
+    "ruff==0.5.5",
+    "black==24.4.2",
+]
+
+[project.scripts]
+pentest-train = "agents.train:main"
+pentest-eval = "evaluation.run_experiments:main"
+
+[tool.setuptools.packages.find]
+include = ["gym_pentest*", "agents*", "evaluation*", "utils*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

@@ -1,23 +1,30 @@
-\
-import random, threading, math
+"""Prioritized experience replay buffer with sum-tree sampling."""
+
+from __future__ import annotations
+
+import random
+import threading
+from typing import Any, List, Tuple
+
 
 class SumTree:
-    def __init__(self, capacity):
-        # capacity should be power of two for simple implementation
+    """Binary sum tree for O(log n) priority sampling."""
+
+    def __init__(self, capacity: int) -> None:
         self.capacity = capacity
         self.tree = [0.0] * (2 * capacity)
-        self.data = [None] * capacity
+        self.data: List[Any] = [None] * capacity
         self.write = 0
         self.size = 0
         self.lock = threading.Lock()
 
-    def _propagate(self, idx, change):
+    def _propagate(self, idx: int, change: float) -> None:
         parent = idx // 2
         while parent >= 1:
             self.tree[parent] += change
             parent //= 2
 
-    def add(self, priority, data):
+    def add(self, priority: float, data: Any) -> int:
         with self.lock:
             idx = self.write
             self.data[idx] = data
@@ -29,17 +36,17 @@ class SumTree:
             self.size = min(self.size + 1, self.capacity)
             return idx
 
-    def update(self, idx, priority):
+    def update(self, idx: int, priority: float) -> None:
         with self.lock:
             tree_idx = idx + self.capacity
             change = priority - self.tree[tree_idx]
             self.tree[tree_idx] = priority
             self._propagate(tree_idx, change)
 
-    def total(self):
+    def total(self) -> float:
         return self.tree[1]
 
-    def get(self, s):
+    def get(self, s: float) -> Tuple[int, float, Any]:
         idx = 1
         while idx < self.capacity:
             left = idx * 2
@@ -51,9 +58,17 @@ class SumTree:
         data_idx = idx - self.capacity
         return data_idx, self.tree[idx], self.data[data_idx]
 
+
 class PrioritizedReplay:
-    def __init__(self, capacity=1024, alpha=0.6, beta_start=0.4, beta_frames=100000):
-        # round capacity to power of two
+    """Prioritized replay buffer with importance-sampling correction."""
+
+    def __init__(
+        self,
+        capacity: int = 1024,
+        alpha: float = 0.6,
+        beta_start: float = 0.4,
+        beta_frames: int = 100000,
+    ) -> None:
         cap = 1
         while cap < capacity:
             cap <<= 1
@@ -64,12 +79,11 @@ class PrioritizedReplay:
         self.beta_frames = beta_frames
         self.frame = 1
 
-    def add(self, error, sample):
+    def add(self, error: float, sample: Any) -> int:
         priority = (abs(error) + 1e-6) ** self.alpha
-        idx = self.tree.add(priority, sample)
-        return idx
+        return self.tree.add(priority, sample)
 
-    def sample(self, n):
+    def sample(self, n: int) -> Tuple[List[int], List[Any], List[float]]:
         total = self.tree.total()
         if total == 0:
             return [], [], []
@@ -85,17 +99,16 @@ class PrioritizedReplay:
             ps.append(p)
         probs = [p / total for p in ps]
         beta = self._beta_by_frame()
-        N = max(1, self.tree.size)
-        weights = [(N * prob) ** (-beta) for prob in probs]
-        # normalize weights
+        n_size = max(1, self.tree.size)
+        weights = [(n_size * prob) ** (-beta) for prob in probs]
         max_w = max(weights) if weights else 1.0
         weights = [w / (max_w + 1e-8) for w in weights]
         self.frame += 1
         return idxs, samples, weights
 
-    def update(self, idx, error):
+    def update(self, idx: int, error: float) -> None:
         p = (abs(error) + 1e-6) ** self.alpha
         self.tree.update(idx, p)
 
-    def _beta_by_frame(self):
+    def _beta_by_frame(self) -> float:
         return min(1.0, self.beta_start + (1.0 - self.beta_start) * (self.frame / float(self.beta_frames)))

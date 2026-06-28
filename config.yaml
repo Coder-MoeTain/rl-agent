@@ -4,11 +4,23 @@
 environment:
   base_url: "http://localhost:3000"
   max_steps: 100
+  mission_vuln_threshold: 2
+  observation_dim: 128
+  num_actions: 15
+
+# Reward shaping (optional overrides)
+rewards:
+  step_penalty: -0.01
+  duplicate_action_penalty: -0.15
+  xss_reward: 30.0
+  sqli_reward: 25.0
+  idor_reward: 20.0
+  mission_complete_bonus: 50.0
 
 # PPO settings
 ppo:
   policy: "MlpPolicy"
-  learning_rate: 3e-4
+  learning_rate: 0.0003
   n_steps: 2048
   batch_size: 64
   n_epochs: 10
@@ -18,13 +30,14 @@ ppo:
   ent_coef: 0.01
   vf_coef: 0.5
   max_grad_norm: 0.5
+  n_envs: 4
 
 # PER settings
 per:
   capacity: 4096
-  alpha: 0.6  # Priority exponent
-  beta_start: 0.4  # Initial importance sampling correction
-  beta_frames: 100000  # Frames to anneal beta to 1.0
+  alpha: 0.6
+  beta_start: 0.4
+  beta_frames: 100000
   batch_size: 64
 
 # Training settings
@@ -33,16 +46,25 @@ training:
   log_interval: 10
   save_interval: 1000
   tensorboard_log: "./tensorboard_logs/"
+  seed: 42
+  model_dir: "./models/"
 
 # Multi-agent settings
 multi_agent:
   num_episodes: 200
   batch_size: 64
-  learning_rate: 3e-4
+  learning_rate: 0.0003
   hidden_size: 256
+  seed: 42
+
+# Evaluation settings
+evaluation:
+  seeds: [42, 123, 456]
+  episodes_per_seed: 5
+  output_dir: "./results/"
+  algorithms: ["random", "rule_based", "ppo", "ppo_per"]
 
 # Logging
 logging:
-  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
   file: "training.log"
-

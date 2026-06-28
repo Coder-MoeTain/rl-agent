@@ -1,46 +1,89 @@
-# 🚀 Quick Start Guide
+# Quick Start
 
-## 5-Minute Setup
+Get the pentesting RL framework running in 5 minutes.
 
-### Step 1: Install Dependencies
+## Prerequisites
+
+- Python 3.10+
+- Docker (for Juice Shop lab target)
+
+## Install
+
+```bash
+git clone <repo-url> rl-agent
+cd rl-agent
+pip install -e ".[dev]"
+```
+
+Or with requirements.txt:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 2: Start Target (Juice Shop)
-```bash
-docker-compose up -d
-```
-
-### Step 3: Train Your First Agent
-```bash
-# Single agent (recommended for first time)
-python agents/train_single_agent.py
-```
-
-### Step 4: View Results
-```bash
-# Open TensorBoard
-tensorboard --logdir ./tensorboard_logs/
-# Visit http://localhost:6006
-```
-
-## Agent Options
-
-| Command | Agents | Best For |
-|---------|--------|----------|
-| `python agents/train_single_agent.py` | 1 (Baseline) | Learning |
-| `python train_sb3_per.py` | 1 (Enhanced) | Production |
-| `python agents/train_multi_agent_per_is.py` | 2 (Specialized) | Research |
-
-## Quick Test
+## Start Lab Target
 
 ```bash
-# Test environment
-python -c "from gym_pentest.env import PentestEnv; env = PentestEnv(); obs, _ = env.reset(); print('✓ Ready!')"
+docker compose up -d
+# Juice Shop available at http://localhost:3000
 ```
 
-## Need More Details?
+Verify connectivity:
 
-See `PROFESSIONAL_GUIDE.md` for comprehensive documentation.
+```bash
+curl -s http://localhost:3000 | head -c 100
+```
 
+## Run Tests
+
+Tests use mocked HTTP — no Docker required:
+
+```bash
+pytest tests/ -v
+```
+
+## Train an Agent
+
+```bash
+# PPO baseline (~2 min on CPU)
+python -m agents.train --algo ppo
+
+# Models saved to ./models/
+```
+
+## Evaluate
+
+```bash
+# Compare random and rule-based baselines
+python -m evaluation.run_experiments --algorithms random rule_based
+
+# Results in ./results/
+ls results/
+# episodes.csv  aggregate.csv  results.json  algorithm_comparison.png
+```
+
+## Configuration
+
+Edit `config.yaml` for hyperparameters:
+
+```yaml
+environment:
+  base_url: "http://localhost:3000"
+  max_steps: 100
+
+training:
+  total_timesteps: 20000
+  seed: 42
+```
+
+## Common Commands
+
+| Task | Command |
+|------|---------|
+| Train PPO | `python -m agents.train --algo ppo` |
+| Train PPO+PER | `python -m agents.train --algo ppo_per` |
+| Multi-agent | `python -m agents.train --algo multi` |
+| Evaluate | `python -m evaluation.run_experiments` |
+| Test agent | `python test_trained_agent.py --model models/ppo_baseline` |
+| Lint | `ruff check .` |
+| Format | `black .` |

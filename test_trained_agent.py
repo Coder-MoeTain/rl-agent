@@ -9,6 +9,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from stable_baselines3 import PPO
+from gym_pentest.actions import ACTION_NAMES
 from gym_pentest.env import PentestEnv
 from gpu_utils import setup_gpu
 
@@ -203,17 +204,6 @@ def watch_agent_play(model_path, num_episodes=3):
     
     env = PentestEnv()
     
-    action_names = [
-        "Crawl root",
-        "GET /login",
-        "GET /feedback",
-        "POST login",
-        "XSS inject (script)",
-        "GET /products",
-        "GET /whoami",
-        "XSS inject (img)"
-    ]
-    
     for episode in range(num_episodes):
         print(f"\n{'='*70}")
         print(f"Episode {episode + 1}")
@@ -233,7 +223,7 @@ def watch_agent_play(model_path, num_episodes=3):
             step += 1
             
             print(f"\nStep {step}:")
-            print(f"  Action: {action} ({action_names[action] if action < len(action_names) else 'Unknown'})")
+            print(f"  Action: {action} ({ACTION_NAMES.get(action, 'Unknown')})")
             print(f"  Reward: {reward:+.2f}")
             print(f"  Total reward: {total_reward:.2f}")
             print(f"  Discovered: {info.get('discovered_count', 0)} endpoints")
