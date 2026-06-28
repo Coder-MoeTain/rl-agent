@@ -1,11 +1,11 @@
 """Tests for action validity and execution."""
 
-from gym_pentest.actions import ACTION_NAMES, EXPLOIT_ACTIONS, NUM_ACTIONS, RECON_ACTIONS
+from gym_pentest.actions import ACTION_NAMES, NUM_ACTIONS, RECON_ACTIONS, TEST_ACTIONS
 
 
 def test_num_actions(mock_env):
     assert mock_env.action_space.n == NUM_ACTIONS
-    assert NUM_ACTIONS == 15
+    assert NUM_ACTIONS == 16
 
 
 def test_all_actions_executable(mock_env):
@@ -24,6 +24,13 @@ def test_recon_actions_subset():
     assert 13 in RECON_ACTIONS
 
 
-def test_exploit_actions_subset():
-    assert 3 in EXPLOIT_ACTIONS
-    assert 4 in EXPLOIT_ACTIONS
+def test_test_actions_subset():
+    assert 3 in TEST_ACTIONS
+    assert 4 in TEST_ACTIONS
+
+
+def test_generate_report_action(mock_env):
+    mock_env.reset(seed=0)
+    _, reward, _, _, info = mock_env.step(15)
+    assert info["report_generated"] is True
+    assert reward > 0

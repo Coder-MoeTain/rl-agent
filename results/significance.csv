@@ -1,0 +1,2 @@
+algorithm_a,algorithm_b,metric,mean_a,mean_b,p_value,significant,test_name,effect_size
+random,rule_based,total_reward,189.326,93.60333333333334,2.583889089646796e-05,True,welch_t,2.5758043643211397

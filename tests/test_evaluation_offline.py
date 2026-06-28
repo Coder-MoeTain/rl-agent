@@ -8,15 +8,20 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-import pytest
 
-from tests.conftest import build_mock_http_client
-from gym_pentest.env import PentestEnv
 from agents.baselines import RandomAgent, RuleBasedAgent
+from gym_pentest.env import PentestEnv
+from gym_pentest.scoreboard import MockScoreboard
+from gym_pentest.mock_http import build_mock_http_client
 
 
 def test_offline_eval_random():
-    env = PentestEnv(http_client=build_mock_http_client(), disable_scope_guard=True, max_steps=20)
+    env = PentestEnv(
+        http_client=build_mock_http_client(),
+        scoreboard=MockScoreboard(),
+        disable_scope_guard=True,
+        max_steps=20,
+    )
     agent = RandomAgent(env.action_space.n, seed=42)
     obs, _ = env.reset(seed=42)
     total = 0.0
@@ -30,7 +35,12 @@ def test_offline_eval_random():
 
 
 def test_offline_eval_rule_based():
-    env = PentestEnv(http_client=build_mock_http_client(), disable_scope_guard=True, max_steps=20)
+    env = PentestEnv(
+        http_client=build_mock_http_client(),
+        scoreboard=MockScoreboard(),
+        disable_scope_guard=True,
+        max_steps=20,
+    )
     agent = RuleBasedAgent(env.action_space.n, seed=42)
     agent.reset()
     obs, _ = env.reset(seed=42)

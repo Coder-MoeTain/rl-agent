@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check gym_pentest agents evaluation utils pentester tests config_loader.py setup_logging.py benchmarks
+
+      - name: Black format check
+        run: black --check gym_pentest agents evaluation utils pentester tests config_loader.py setup_logging.py benchmarks
+
+      - name: Pytest
+        run: pytest tests/ -v --tb=short
+
+      - name: Production pentester smoke (mock)
+        run: autopentest scan --mock --algorithm rule_based -o ./reports/ci_smoke -q
+        run: python -m evaluation.run_experiments --algorithms random rule_based --mock

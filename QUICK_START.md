@@ -1,89 +1,91 @@
 # Quick Start
 
-Get the pentesting RL framework running in 5 minutes.
-
 ## Prerequisites
 
 - Python 3.10+
-- Docker (for Juice Shop lab target)
+- Docker (optional, for OWASP Juice Shop lab target)
 
-## Install
+## Installation
 
 ```bash
-git clone <repo-url> rl-agent
-cd rl-agent
+git clone <repo-url> rl-agent && cd rl-agent
+python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Or with requirements.txt:
+## Verify Installation (no Docker)
 
 ```bash
-pip install -r requirements.txt
+pytest tests/ -v
+python -m evaluation.run_experiments --mock --algorithms random rule_based multi_agent
 ```
 
 ## Start Lab Target
 
 ```bash
-docker compose up -d
-# Juice Shop available at http://localhost:3000
+docker compose up -d   # OWASP Juice Shop on http://localhost:3000
 ```
 
-Verify connectivity:
+## Training
 
 ```bash
-curl -s http://localhost:3000 | head -c 100
-```
-
-## Run Tests
-
-Tests use mocked HTTP — no Docker required:
-
-```bash
-pytest tests/ -v
-```
-
-## Train an Agent
-
-```bash
-# PPO baseline (~2 min on CPU)
+# PPO baseline
 python -m agents.train --algo ppo
 
-# Models saved to ./models/
+# PPO with Prioritized Experience Replay
+python -m agents.train --algo ppo_per
+
+# Multi-agent framework (recon + testing + evidence + risk + report)
+python -m agents.train --algo multi
 ```
 
-## Evaluate
+Models save to `./models/`. TensorBoard logs save to `./tensorboard_logs/`:
 
 ```bash
-# Compare random and rule-based baselines
-python -m evaluation.run_experiments --algorithms random rule_based
-
-# Results in ./results/
-ls results/
-# episodes.csv  aggregate.csv  results.json  algorithm_comparison.png
+tensorboard --logdir tensorboard_logs/
 ```
+
+## Evaluation
+
+```bash
+# Offline (mocked HTTP)
+python -m evaluation.run_experiments --mock
+
+# Live against Juice Shop
+python -m evaluation.run_experiments
+
+# Specific algorithms
+python -m evaluation.run_experiments --mock --algorithms random rule_based ppo ppo_per multi_agent
+```
+
+Results save to `./results/`:
+- `episodes.csv`, `aggregate.csv`, `results.json`
+- `algorithm_comparison.png`, `endpoint_coverage.png`, `vulnerability_discovery.png`
+- `BENCHMARK.md`
+
+## Ablation Studies
+
+```bash
+python -m evaluation.ablation --mock
+python -m evaluation.ablation --mock --ablations no_attack_graph no_duplicate_penalty
+```
+
+Results save to `./results/ablations/`.
 
 ## Configuration
 
-Edit `config.yaml` for hyperparameters:
+Edit `config.yaml` for environment, safety, rewards, PPO/PER hyperparameters, and evaluation seeds.
+
+Key safety settings (enabled by default):
 
 ```yaml
-environment:
-  base_url: "http://localhost:3000"
-  max_steps: 100
-
-training:
-  total_timesteps: 20000
-  seed: 42
+safety:
+  safe_mode: true
+  allow_public_internet: false
+  max_requests_per_episode: 200
+  requests_per_second: 5.0
 ```
 
-## Common Commands
+## Report Generation
 
-| Task | Command |
-|------|---------|
-| Train PPO | `python -m agents.train --algo ppo` |
-| Train PPO+PER | `python -m agents.train --algo ppo_per` |
-| Multi-agent | `python -m agents.train --algo multi` |
-| Evaluate | `python -m evaluation.run_experiments` |
-| Test agent | `python test_trained_agent.py --model models/ppo_baseline` |
-| Lint | `ruff check .` |
-| Format | `black .` |
+During an episode, action 15 (`generate_finding_report`) produces OWASP-mapped findings with remediation guidance. Reports appear in the environment `info` dict under `finding_reports`.

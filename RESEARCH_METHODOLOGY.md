@@ -1,134 +1,85 @@
 # Research Methodology
 
-## Problem Formulation
+## Research Problem
 
-Autonomous web penetration testing is modeled as a **Markov Decision Process (MDP)**:
+Autonomous web vulnerability assessment requires agents to explore large application surfaces, prioritize high-value test actions, validate findings with evidence, and produce actionable remediation guidance — all within strict safety and authorization constraints.
 
-### State Space (S)
+## Motivation
 
-128-dimensional observation vector combining:
+Manual security testing is slow and does not scale. Rule-based scanners lack adaptive exploration. RL offers a principled approach to sequential decision-making under uncertainty, but existing work often frames systems as offensive attack tools rather than defensive assessment frameworks.
 
-| Feature Group | Dims | Description |
-|---------------|------|-------------|
-| Graph topology | 0–17 | Degree stats, PageRank, component size |
-| Response | 18–20 | Last HTTP status, body length, step fraction |
-| Session | 21–23 | Login status, forms found, params found |
-| Evidence | 24–29 | Vuln counts by type (XSS, SQLi, IDOR, SENSITIVE) |
-| Action history | 30–44 | Compact encoding of last 5 actions |
+## Objectives
 
-Internal state (not fully observed):
-- NetworkX attack graph (nodes = URLs, edges = links)
-- Evidence tracker with deduplicated findings
-- Discovered endpoint set
+1. Design a safe, defense-oriented RL environment for authorized lab targets
+2. Formulate web assessment as an MDP with discovery graph observations
+3. Develop reward shaping aligned with vulnerability discovery, evidence confirmation, and remediation
+4. Implement a multi-agent architecture with specialized roles and shared memory
+5. Compare PPO, PPO+PER, and multi-agent RL against random and rule-based baselines
+6. Evaluate with rigorous multi-seed statistics and ablation studies
 
-### Action Space (A)
-
-15 discrete macro-actions:
-
-| ID | Action | Category |
-|----|--------|----------|
-| 0 | Crawl root | Recon |
-| 1 | GET login page | Recon |
-| 2 | GET feedback API | Recon |
-| 3 | POST login | Auth |
-| 4 | XSS (script tag) | Exploit |
-| 5 | GET products | Recon |
-| 6 | GET whoami | Recon |
-| 7 | XSS (img onerror) | Exploit |
-| 8 | SQLi login probe | Exploit |
-| 9 | SQLi search probe | Exploit |
-| 10 | IDOR user profile | Exploit |
-| 11 | Sensitive config check | Recon |
-| 12 | Confirm finding | Confirm |
-| 13 | Crawl discovered | Recon |
-| 14 | Access control basket | Exploit |
-
-### Reward Function (R)
-
-Configurable via `config.yaml` (`rewards` section):
-
-- **Step penalty**: -0.01 (efficiency pressure)
-- **Duplicate action penalty**: -0.15
-- **Recon rewards**: +1.0 crawl, +0.5 successful GET, +0.3 per new endpoint
-- **Exploit rewards**: +30 XSS, +25 SQLi, +20 IDOR, +15 sensitive data
-- **Confirmation**: +5.0 for verified finding
-- **Mission complete**: +50.0 terminal bonus
-
-### Transition Dynamics (P)
-
-Deterministic action dispatch with stochastic HTTP responses from the target. The agent cannot control server responses — only which probe to send.
-
-### Terminal Conditions
-
-- **Truncated**: `steps >= max_steps` (default 100)
-- **Terminated**: `confirmed_vulns >= threshold` OR `(vulns >= threshold AND logged_in)`
-
-## Architecture
+## System Overview
 
 ```
-┌─────────────┐     action      ┌──────────────────┐
-│  RL Agent   │ ──────────────> │   PentestEnv     │
-│ (PPO/PER/   │                 │                  │
-│  Multi)     │ <────────────── │  - Scope Guard   │
-└─────────────┘   obs, reward   │  - HTTP Client   │
-                                │  - Attack Graph  │
-                                │  - Evidence      │
-                                └────────┬─────────┘
-                                         │ HTTP
-                                         v
-                                ┌──────────────────┐
-                                │  Juice Shop Lab  │
-                                │  localhost:3000  │
-                                └──────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    Assessment Orchestrator                   │
+├──────────┬──────────┬──────────┬──────────┬─────────────────┤
+│  Recon   │ Testing  │ Evidence │   Risk   │     Report      │
+│  Agent   │  Agent   │  Agent   │  Agent   │     Agent       │
+├──────────┴──────────┴──────────┴──────────┴─────────────────┤
+│              Shared Memory (Discovery Graph + Evidence)      │
+├─────────────────────────────────────────────────────────────┤
+│  Safety Layer: Scope Guard │ Rate Limiter │ Emergency Stop   │
+├─────────────────────────────────────────────────────────────┤
+│              Gymnasium Environment (PentestEnv)              │
+├─────────────────────────────────────────────────────────────┤
+│         Authorized Lab Target (Juice Shop / DVWA / etc.)     │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Algorithms
+## Lab Environment
 
-### PPO Baseline
-Standard Proximal Policy Optimization (Stable-Baselines3) with MlpPolicy.
+Primary benchmark: **OWASP Juice Shop v13.6.0** (`docker compose up -d`).
 
-### PPO + PER
-Experimental prioritized sampling within rollout buffer using TD-error priorities and importance-sampling correction (β annealing).
+Generalization target: DVWA, WebGoat, or private test applications (requires config update to `environment.base_url` and scope allowlist).
 
-### Multi-Agent Recon/Exploit
-Two ActorCritic networks sharing a PER buffer:
-- **Recon agent**: action mask restricts to recon actions (0,1,2,5,6,11,13)
-- **Exploit agent**: action mask restricts to auth/exploit/confirm actions
-- Role-specific reward shaping on coverage and vuln discovery
+## Experimental Setup
 
-### Baselines
-- **Random**: uniform action selection
-- **Rule-based**: recon sequence → exploit sequence, avoids repeats
+| Parameter | Value |
+|-----------|-------|
+| Seeds | 42, 123, 456, 789, 1011 |
+| Episodes per seed | 10 |
+| Max steps per episode | 100 |
+| Observation dim | 128 |
+| Action space | 16 discrete lab actions |
 
-## Experiment Protocol
+## Baselines
 
-1. **Seeds**: Default `[42, 123, 456, 789, 1011]` (configurable)
-2. **Episodes per seed**: 10
-3. **Metrics collected**:
-   - Mean/std episode reward
-   - Endpoint coverage (% of known lab endpoints discovered)
-   - Vulnerability discovery rate
-   - Steps to first finding
-   - Success rate (% episodes with positive reward)
-   - Training time
-4. **Outputs**: `episodes.csv`, `aggregate.csv`, `results.json`, comparison plots
-5. **Reproducibility**: `set_global_seed()` sets Python/NumPy/Torch seeds
+| Algorithm | Description |
+|-----------|-------------|
+| `random` | Uniform random action selection |
+| `rule_based` | Recon-first heuristic crawler/scanner |
+| `ppo` | Stable-Baselines3 PPO |
+| `ppo_per` | PPO with prioritized experience replay |
+| `multi_agent` | 5-role coordinated multi-agent framework |
 
-```bash
-python -m evaluation.run_experiments --algorithms random rule_based ppo ppo_per
-```
+## Statistical Analysis
 
-## Limitations
+- Welch's t-test for pairwise algorithm comparison
+- Cohen's d effect size
+- 95% confidence intervals on mean reward
+- Results in `results/significance.csv` and `BENCHMARK.md`
 
-1. **Macro-actions only** — no free-form payload generation
-2. **Heuristic detection** — XSS via reflection, not DOM execution
-3. **Single target** — tuned for Juice Shop v13.6.0
-4. **Synchronous HTTP** — no concurrent requests
-5. **PPO+PER** — not canonical off-policy PER across episodes
+## Ablation Studies
 
-## Ethics
+See [EXPERIMENT_DESIGN.md](EXPERIMENT_DESIGN.md) for full ablation matrix.
 
-- Default scope guard blocks non-localhost targets
-- Intended for authorized lab environments only
-- Do not use against production systems without written permission
-- Findings should be validated manually before reporting
+## Ethical Boundaries
+
+See [ETHICS_AND_SAFETY.md](ETHICS_AND_SAFETY.md). All experiments must use authorized lab targets only.
+
+## Future Work
+
+- Transfer learning across lab targets (Juice Shop → DVWA)
+- DOM-aware XSS validation
+- Human-in-the-loop confirmation workflows
+- Integration with CI/CD security pipelines

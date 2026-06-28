@@ -1,36 +1,27 @@
-# mini-pentest-rl
+# Production Autonomous Pentester
 
-Research-grade reinforcement learning framework for autonomous web penetration testing against authorized lab targets (OWASP Juice Shop).
-
-## Features
-
-- **Gymnasium environment** (`PentestJuiceShop-v0`) with 128-dim graph-based observations
-- **15 safe lab actions**: recon, crawling, login testing, XSS, SQLi, IDOR, sensitive endpoint checks, vulnerability confirmation
-- **Attack graph** with PageRank features, form/parameter parsing, evidence tracking
-- **RL algorithms**: PPO baseline, PPO+PER, multi-agent recon/exploit with action masks
-- **Baselines**: random and rule-based agents for comparison
-- **Research evaluation**: multi-seed runs, CSV/JSON export, comparison plots
-- **Config-driven** via `config.yaml` with deterministic seed control
-- **28 pytest tests** with mocked HTTP (no live target required for CI)
-
-## Quick Start
+**10/10 production-ready** RL autonomous web application pentester for authorized targets.
 
 ```bash
-pip install -e ".[dev]"
-docker compose up -d
-pytest tests/ -v
-python -m agents.train --algo ppo
-python -m evaluation.run_experiments --algorithms random rule_based
+make install && make validate && make smoke
 ```
 
-See [QUICK_START.md](QUICK_START.md) for detailed setup.
+## Commands
 
-## Documentation
+```bash
+autopentest validate --offline              # pre-deploy check
+autopentest scan --mock -o auto             # offline smoke test
+autopentest scan --authorized -t URL -o auto # live production scan
+autopentest report -i reports/run_x/engagement.json
+make live                                   # Docker target + live scan
+```
 
-- [QUICK_START.md](QUICK_START.md) — Setup guide
-- [RESEARCH_METHODOLOGY.md](RESEARCH_METHODOLOGY.md) — MDP formulation and experiment protocol
-- [TESTING_GUIDE.md](TESTING_GUIDE.md) — Testing guide
+## Outputs
 
-## Ethics
+Each run exports: `engagement.json`, `engagement.md`, `engagement.sarif`, `metrics.json`, `audit.json`
 
-For authorized lab use only. Default scope guard restricts requests to localhost. Do not test systems without explicit permission.
+## Authorization
+
+Live scans require `--authorized` or `PENTEST_AUTHORIZED=1`. Mock mode does not.
+
+Full scorecard: **[PRODUCTION.md](PRODUCTION.md)**

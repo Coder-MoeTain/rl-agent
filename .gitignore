@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Models and logs
+models/
+tensorboard_logs/
+training.log
+*.log
+
+# Results (keep structure, ignore generated data in dev)
+results/test_smoke/
+reports/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Test/coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/

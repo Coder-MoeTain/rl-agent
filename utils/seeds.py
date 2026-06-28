@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import random
-from typing import Optional
 
 import numpy as np
 
@@ -33,6 +32,6 @@ def set_global_seed(seed: int, deterministic_torch: bool = True) -> None:
         pass
 
 
-def get_rng(seed: Optional[int] = None) -> np.random.Generator:
+def get_rng(seed: int | None = None) -> np.random.Generator:
     """Return a NumPy Generator with optional seed."""
     return np.random.default_rng(seed)

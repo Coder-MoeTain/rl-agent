@@ -1,12 +1,30 @@
-# Configuration file for mini-pentest-rl
+# Configuration for defensive web vulnerability assessment RL framework
 
 # Environment settings
 environment:
   base_url: "http://localhost:3000"
   max_steps: 100
   mission_vuln_threshold: 2
+  mission_challenge_threshold: 1
+  use_scoreboard: true
   observation_dim: 128
-  num_actions: 15
+  num_actions: 16
+
+# Safety controls (enabled by default for authorized lab use)
+safety:
+  safe_mode: true
+  allow_public_internet: false
+  allow_private_networks: true
+  max_requests_per_episode: 200
+  requests_per_second: 5.0
+  emergency_stop_on_scope_violation: true
+  max_scope_violations: 3
+  log_all_actions: true
+  allowed_hosts:
+    - "localhost"
+    - "127.0.0.1"
+    - "0.0.0.0"
+    - "::1"
 
 # Reward shaping (optional overrides)
 rewards:
@@ -16,6 +34,16 @@ rewards:
   sqli_reward: 25.0
   idor_reward: 20.0
   mission_complete_bonus: 50.0
+  challenge_solved_reward: 40.0
+  report_generation_reward: 12.0
+  remediation_info_bonus: 8.0
+  confirmed_vulnerability_bonus: 5.0
+  new_form_bonus: 0.2
+  new_parameter_bonus: 0.1
+  use_attack_graph_features: true
+  use_duplicate_penalty: true
+  use_vulnerability_confirmation: true
+  use_safety_aware_reward: true
 
 # PPO settings
 ppo:
@@ -59,10 +87,37 @@ multi_agent:
 
 # Evaluation settings
 evaluation:
-  seeds: [42, 123, 456]
-  episodes_per_seed: 5
+  seeds: [42, 123, 456, 789, 1011]
+  episodes_per_seed: 10
   output_dir: "./results/"
-  algorithms: ["random", "rule_based", "ppo", "ppo_per"]
+  algorithms:
+    - random
+    - rule_based
+    - ppo
+    - ppo_per
+    - multi_agent
+
+# Ablation study configurations
+ablations:
+  - name: full
+    use_attack_graph_features: true
+    use_duplicate_penalty: true
+    use_vulnerability_confirmation: true
+    use_per: true
+    use_multi_agent: true
+    use_safety_aware_reward: true
+  - name: no_attack_graph
+    use_attack_graph_features: false
+  - name: no_duplicate_penalty
+    use_duplicate_penalty: false
+  - name: no_confirmation
+    use_vulnerability_confirmation: false
+  - name: no_per
+    use_per: false
+  - name: no_multi_agent
+    use_multi_agent: false
+  - name: no_safety_reward
+    use_safety_aware_reward: false
 
 # Logging
 logging:

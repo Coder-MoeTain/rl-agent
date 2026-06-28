@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -26,15 +25,22 @@ def plot_comparison(results_df: pd.DataFrame, output_dir: Path) -> None:
     for idx, (col, title) in enumerate(metrics):
         ax = axes[idx]
         if col in results_df.columns:
-            results_df.plot(x="algorithm", y=col, kind="bar", ax=ax, legend=False, color="steelblue")
+            results_df.plot(
+                x="algorithm", y=col, kind="bar", ax=ax, legend=False, color="steelblue"
+            )
             ax.set_title(title)
             ax.set_xlabel("")
             ax.tick_params(axis="x", rotation=45)
 
     # Training time if available
     ax = axes[5]
-    if "training_time_seconds" in results_df.columns and results_df["training_time_seconds"].notna().any():
-        results_df.plot(x="algorithm", y="training_time_seconds", kind="bar", ax=ax, legend=False, color="coral")
+    if (
+        "training_time_seconds" in results_df.columns
+        and results_df["training_time_seconds"].notna().any()
+    ):
+        results_df.plot(
+            x="algorithm", y="training_time_seconds", kind="bar", ax=ax, legend=False, color="coral"
+        )
         ax.set_title("Training Time (seconds)")
         ax.set_xlabel("")
         ax.tick_params(axis="x", rotation=45)
@@ -61,6 +67,57 @@ def plot_reward_distribution(episodes_df: pd.DataFrame, output_dir: Path) -> Non
     ax.tick_params(axis="x", rotation=45)
     plt.tight_layout()
     fig.savefig(output_dir / "reward_distribution.png", dpi=150)
+    plt.close(fig)
+
+
+def plot_coverage(episodes_df: pd.DataFrame, output_dir: Path) -> None:
+    """Bar plot of endpoint coverage by algorithm."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if episodes_df.empty:
+        return
+    grouped = episodes_df.groupby("algorithm")["endpoint_coverage"].mean()
+    fig, ax = plt.subplots(figsize=(10, 6))
+    grouped.plot(kind="bar", ax=ax, color="seagreen")
+    ax.set_ylabel("Mean Endpoint Coverage")
+    ax.set_title("Endpoint Coverage by Algorithm")
+    ax.tick_params(axis="x", rotation=45)
+    plt.tight_layout()
+    fig.savefig(output_dir / "endpoint_coverage.png", dpi=150)
+    plt.close(fig)
+
+
+def plot_vulnerability_discovery(episodes_df: pd.DataFrame, output_dir: Path) -> None:
+    """Bar plot of vulnerability discovery rate by algorithm."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if episodes_df.empty:
+        return
+    fig, ax = plt.subplots(figsize=(10, 6))
+    grouped = episodes_df.groupby("algorithm").agg(
+        vulns=("vulnerabilities", "mean"),
+        confirmed=("confirmed_vulnerabilities", "mean"),
+    )
+    grouped.plot(kind="bar", ax=ax)
+    ax.set_ylabel("Mean Count per Episode")
+    ax.set_title("Vulnerability Discovery by Algorithm")
+    ax.tick_params(axis="x", rotation=45)
+    ax.legend(["Total Findings", "Confirmed Findings"])
+    plt.tight_layout()
+    fig.savefig(output_dir / "vulnerability_discovery.png", dpi=150)
+    plt.close(fig)
+
+
+def plot_training_curves(rewards: list[float], output_dir: Path, name: str = "training") -> None:
+    """Save training reward curve plot."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if not rewards:
+        return
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(rewards, alpha=0.7)
+    ax.set_xlabel("Step")
+    ax.set_ylabel("Reward")
+    ax.set_title(f"Training Curve: {name}")
+    plt.tight_layout()
+    fig.savefig(output_dir / f"{name}_curve.png", dpi=150)
     plt.close(fig)
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 import threading
-from typing import Any, List, Tuple
+from typing import Any
 
 
 class SumTree:
@@ -13,7 +13,7 @@ class SumTree:
     def __init__(self, capacity: int) -> None:
         self.capacity = capacity
         self.tree = [0.0] * (2 * capacity)
-        self.data: List[Any] = [None] * capacity
+        self.data: list[Any] = [None] * capacity
         self.write = 0
         self.size = 0
         self.lock = threading.Lock()
@@ -46,7 +46,7 @@ class SumTree:
     def total(self) -> float:
         return self.tree[1]
 
-    def get(self, s: float) -> Tuple[int, float, Any]:
+    def get(self, s: float) -> tuple[int, float, Any]:
         idx = 1
         while idx < self.capacity:
             left = idx * 2
@@ -83,7 +83,7 @@ class PrioritizedReplay:
         priority = (abs(error) + 1e-6) ** self.alpha
         return self.tree.add(priority, sample)
 
-    def sample(self, n: int) -> Tuple[List[int], List[Any], List[float]]:
+    def sample(self, n: int) -> tuple[list[int], list[Any], list[float]]:
         total = self.tree.total()
         if total == 0:
             return [], [], []
@@ -111,4 +111,6 @@ class PrioritizedReplay:
         self.tree.update(idx, p)
 
     def _beta_by_frame(self) -> float:
-        return min(1.0, self.beta_start + (1.0 - self.beta_start) * (self.frame / float(self.beta_frames)))
+        return min(
+            1.0, self.beta_start + (1.0 - self.beta_start) * (self.frame / float(self.beta_frames))
+        )

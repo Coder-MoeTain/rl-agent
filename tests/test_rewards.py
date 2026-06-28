@@ -1,7 +1,5 @@
 """Tests for reward logic."""
 
-from gym_pentest.rewards import RewardConfig
-
 
 def test_step_penalty_applied(mock_env):
     mock_env.reset(seed=0)

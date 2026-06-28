@@ -1,7 +1,34 @@
-version: '3.8'
+version: "3.8"
+
 services:
   juice-shop:
     image: bkimminich/juice-shop:v13.6.0
     ports:
-      - 3000:3000
+      - "3000:3000"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pentester:
+    build: .
+    depends_on:
+      juice-shop:
+        condition: service_healthy
+    environment:
+      - PENTESTER_CONFIG=/app/config.production.yaml
+    volumes:
+      - ./models:/app/models:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    command: >
+      scan
+      --authorized
+      --config /app/config.production.yaml
+      --target http://juice-shop:3000
+      --output /app/reports/latest
+      --algorithm auto
+    profiles:
+      - scan

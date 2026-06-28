@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mini-pentest-rl"
-version = "1.0.0"
-description = "Research-grade RL framework for autonomous web penetration testing"
+version = "2.0.0"
+description = "Production autonomous web application pentester with RL agents"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -20,6 +20,8 @@ dependencies = [
     "matplotlib==3.9.0",
     "pandas==2.2.2",
     "pyyaml==6.0.1",
+    "scipy>=1.11.0",
+    "tensorboard>=2.14.0",
 ]
 
 [project.optional-dependencies]
@@ -31,11 +33,16 @@ dev = [
 ]
 
 [project.scripts]
+autopentest = "pentester.cli:main"
 pentest-train = "agents.train:main"
 pentest-eval = "evaluation.run_experiments:main"
+vuln-assess-ablation = "evaluation.ablation:main"
+
+[tool.setuptools]
+py-modules = ["config_loader", "setup_logging", "custom_sb3_per"]
 
 [tool.setuptools.packages.find]
-include = ["gym_pentest*", "agents*", "evaluation*", "utils*"]
+include = ["gym_pentest*", "agents*", "evaluation*", "utils*", "pentester*"]
 
 [tool.black]
 line-length = 100

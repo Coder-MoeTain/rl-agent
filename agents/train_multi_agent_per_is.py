@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -39,7 +38,7 @@ class ActorCritic(nn.Module):
         self.policy = nn.Linear(hidden, act_dim)
         self.value = nn.Linear(hidden, 1)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         h = self.shared(x)
         return self.policy(h), self.value(h).squeeze(-1)
 
@@ -48,8 +47,8 @@ def masked_select_action(
     net: ActorCritic,
     obs: np.ndarray,
     device: torch.device,
-    allowed: Set[int],
-) -> Tuple[int, float]:
+    allowed: set[int],
+) -> tuple[int, float]:
     """Sample action restricted to allowed set for role specialization."""
     obs_t = torch.from_numpy(obs).float().unsqueeze(0).to(device)
     logits, value = net(obs_t)
@@ -72,7 +71,7 @@ def compute_td(
     done: bool,
     device: torch.device,
     gamma: float = 0.99,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     with torch.no_grad():
         _, v = net(torch.from_numpy(obs).float().unsqueeze(0).to(device))
         _, vnext = net(torch.from_numpy(next_obs).float().unsqueeze(0).to(device))
@@ -85,7 +84,7 @@ def run_episode(
     env: PentestEnv,
     net: ActorCritic,
     device: torch.device,
-    allowed_actions: Set[int],
+    allowed_actions: set[int],
     replay: PrioritizedReplay,
     role: str,
 ) -> float:

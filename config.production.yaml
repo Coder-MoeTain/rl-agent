@@ -1,0 +1,77 @@
+# Production autonomous pentester configuration
+# Use: autopentest scan --config config.production.yaml
+
+environment:
+  base_url: "http://localhost:3000"
+  max_steps: 150
+  mission_vuln_threshold: 1
+  mission_challenge_threshold: 1
+  use_scoreboard: true
+
+safety:
+  safe_mode: true
+  allow_public_internet: false
+  allow_private_networks: true
+  max_requests_per_episode: 300
+  requests_per_second: 3.0
+  emergency_stop_on_scope_violation: true
+  max_scope_violations: 3
+  log_all_actions: true
+  allowed_hosts:
+    - "localhost"
+    - "127.0.0.1"
+    - "juice-shop"
+    - "0.0.0.0"
+    - "::1"
+
+rewards:
+  step_penalty: -0.01
+  duplicate_action_penalty: -0.15
+  report_generation_reward: 15.0
+  remediation_info_bonus: 10.0
+  use_attack_graph_features: true
+  use_duplicate_penalty: true
+  use_vulnerability_confirmation: true
+  use_safety_aware_reward: true
+
+ppo:
+  policy: "MlpPolicy"
+  learning_rate: 0.0003
+  n_steps: 2048
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  n_envs: 4
+
+per:
+  capacity: 8192
+  alpha: 0.6
+  beta_start: 0.4
+  beta_frames: 100000
+  batch_size: 64
+
+training:
+  total_timesteps: 100000
+  tensorboard_log: "./tensorboard_logs/"
+  seed: 42
+  model_dir: "./models/"
+
+production:
+  default_algorithm: auto
+  output_dir: "./reports/"
+  require_authorization: true
+  health_check_timeout: 5.0
+  engagement_timeout_seconds: 600
+  retry_max: 3
+  circuit_breaker_threshold: 5
+
+logging:
+  level: "INFO"
+  file: "./logs/pentester.log"
+  json: true
+
+evaluation:
+  seeds: [42, 123, 456]
+  episodes_per_seed: 10
+  output_dir: "./results/"
+  algorithms: [random, rule_based, ppo, ppo_per, multi_agent]
